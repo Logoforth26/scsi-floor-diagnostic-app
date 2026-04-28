@@ -61,12 +61,28 @@ async function handleFile(file) {
     const reader = new FileReader();
 
     reader.onload = (event) => {
-      const dataUrl = event.target.result;
+const dataUrl = event.target?.result;
+if (!dataUrl) {
+  setError("Could not read image.");
+  return;
+}
       const [prefix, base64] = dataUrl.split(",");
-      const detectedType = prefix.split(";")[0].replace("data:", "");
+let detectedType = prefix.split(";")[0].replace("data:", "");
 
-      setImageData({ dataUrl, base64 });
-      setMediaType(detectedType);
+// Normalize iPhone / browser variations
+if (detectedType === "image/jpg") {
+  detectedType = "image/jpeg";
+}
+
+// Anthropic-supported image media types
+const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+if (!allowedTypes.includes(detectedType)) {
+  detectedType = "image/jpeg";
+}
+
+setImageData({ dataUrl, base64 });
+setMediaType(detectedType);
       setResult(null);
       setError("");
     };
@@ -177,8 +193,7 @@ async function handleFile(file) {
           <input
   ref={inputRef}
   type="file"
-  accept="image/*,.heic,.heif"
-  capture="environment"
+ accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
   hidden
   onChange={(e) => handleFile(e.target.files?.[0])}
 />
