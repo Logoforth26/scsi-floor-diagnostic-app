@@ -66,7 +66,7 @@ export async function POST(request) {
     ].filter(Boolean).join("\\n");
 
     const message = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-6",
       max_tokens: 1200,
       system: systemPrompt,
       messages: [
