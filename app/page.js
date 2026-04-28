@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import heic2any from "heic2any";
 import "./styles.css";
 
 export default function Page() {
@@ -14,25 +15,70 @@ export default function Page() {
   const [error, setError] = useState("");
   const inputRef = useRef(null);
 
-  function handleFile(file) {
-    if (!file || !file.type.startsWith("image/")) return;
-    if (file.size > 20 * 1024 * 1024) {
-      setError("Please upload an image under 20MB.");
-      return;
+async function handleFile(file) {
+  if (!file) return;
+
+  const fileName = file.name.toLowerCase();
+
+  const isHeic =
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    fileName.endsWith(".heic") ||
+    fileName.endsWith(".heif");
+
+  const isImage = file.type.startsWith("image/") || isHeic;
+
+  if (!isImage) {
+    setError("Please upload a valid image.");
+    return;
+  }
+
+  if (file.size > 20 * 1024 * 1024) {
+    setError("Please upload an image under 20MB.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    setError("");
+
+    let uploadFile = file;
+
+    if (isHeic) {
+      const convertedBlob = await heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality: 0.85
+      });
+
+      uploadFile = new File(
+        [convertedBlob],
+        file.name.replace(/\.(heic|heif)$/i, ".jpg"),
+        { type: "image/jpeg" }
+      );
     }
 
     const reader = new FileReader();
+
     reader.onload = (event) => {
       const dataUrl = event.target.result;
       const [prefix, base64] = dataUrl.split(",");
       const detectedType = prefix.split(";")[0].replace("data:", "");
+
       setImageData({ dataUrl, base64 });
       setMediaType(detectedType);
       setResult(null);
       setError("");
     };
-    reader.readAsDataURL(file);
+
+    reader.readAsDataURL(uploadFile);
+  } catch (err) {
+    console.error(err);
+    setError("We could not prepare that photo. Please try taking another picture.");
+  } finally {
+    setLoading(false);
   }
+}
 
   async function analyzeFloor() {
     if (!imageData) return;
@@ -128,7 +174,14 @@ export default function Page() {
               </div>
             </div>
           )}
-          <input ref={inputRef} type="file" accept="image/*" hidden onChange={(e) => handleFile(e.target.files?.[0])} />
+          <input
+  ref={inputRef}
+  type="file"
+  accept="image/*,.heic,.heif"
+  capture="environment"
+  hidden
+  onChange={(e) => handleFile(e.target.files?.[0])}
+/>
         </div>
 
         {imageData && (
