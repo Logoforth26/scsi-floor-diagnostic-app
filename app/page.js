@@ -1,9 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import heic2any from "heic2any";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import "./styles.css";
 
 export default function Page() {
@@ -48,7 +45,10 @@ async function handleFile(file) {
     let uploadFile = file;
 
     if (isHeic) {
-      const convertedBlob = await heic2any({
+      const heic2anyModule = await import("heic2any");
+const heic2any = heic2anyModule.default;
+
+const convertedBlob = await heic2any({
         blob: file,
         toType: "image/jpeg",
         quality: 0.85
@@ -138,6 +138,11 @@ async function downloadReportPDF() {
   try {
     setLoading(true);
     setError("");
+    const html2canvasModule = await import("html2canvas");
+const jsPDFModule = await import("jspdf");
+
+const html2canvas = html2canvasModule.default;
+const jsPDF = jsPDFModule.default;
 
     const canvas = await html2canvas(reportRef.current, {
       scale: 2,
@@ -238,7 +243,7 @@ async function downloadReportPDF() {
           <input
   ref={inputRef}
   type="file"
- accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+ accept="image/*"
   hidden
   onChange={(e) => handleFile(e.target.files?.[0])}
 />
