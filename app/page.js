@@ -169,9 +169,18 @@ try {
     const jsPDFModule = await import("jspdf");
     const jsPDF = jsPDFModule.default;
 
-    const pdf = new jsPDF("p", "mm", "a4");
+const pdf = new jsPDF("p", "mm", "a4");
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
+const logoResponse = await fetch("/scsi-logo.png");
+const logoBlob = await logoResponse.blob();
+
+const logoDataUrl = await new Promise((resolve) => {
+  const reader = new FileReader();
+  reader.onloadend = () => resolve(reader.result);
+  reader.readAsDataURL(logoBlob);
+});
+
+const pageWidth = pdf.internal.pageSize.getWidth();
     const margin = 15;
     const maxWidth = pageWidth - margin * 2;
     let y = 18;
@@ -195,15 +204,17 @@ try {
       y += 3;
     }
 
-    pdf.setFillColor(20, 45, 80);
-    pdf.rect(0, 0, pageWidth, 28, "F");
+pdf.setFillColor(20, 45, 80);
+pdf.rect(0, 0, pageWidth, 32, "F");
 
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(18);
-    pdf.text("SCSI Floor Diagnostic Report", margin, 18);
+pdf.addImage(logoDataUrl, "PNG", margin, 6, 24, 20);
 
-    y = 38;
+pdf.setTextColor(255, 255, 255);
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(18);
+pdf.text("SCSI Floor Diagnostic Report", margin + 32, 18);
+
+y = 42;
     pdf.setTextColor(0, 0, 0);
 
     addText(`Floor Type: ${result.floorType || "Not provided"}`, 13, true);
