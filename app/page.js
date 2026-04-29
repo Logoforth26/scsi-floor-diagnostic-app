@@ -268,7 +268,11 @@ try {
     <main>
       <header>
         <div className="logo-area">
-          <div className="logo-badge">SCSI</div>
+         <img
+  src="/scsi-logo.png"
+  alt="SCSI Logo"
+  className="real-logo"
+/>
           <div className="logo-text">
             <span>Southern Cleaning Services</span>
             <span>Incorporated · Nationwide</span>
