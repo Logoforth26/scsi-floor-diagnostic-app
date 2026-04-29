@@ -107,7 +107,39 @@ setMediaType("image/jpeg");
     setLoading(false);
   }
 }
+async function analyzeFloor() {
+  if (!imageData) return;
 
+  setLoading(true);
+  setResult(null);
+  setError("");
+
+  try {
+    const response = await fetch("/api/analyze-floor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageBase64: imageData.base64,
+        mediaType,
+        facilityType,
+        trafficLevel,
+        knownIssues
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Analysis failed.");
+    }
+
+    setResult(data);
+  } catch (err) {
+    setError(err.message || "Analysis failed. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+}
  async function downloadReportPDF() {
   if (!result) return;
 
