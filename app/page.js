@@ -2,6 +2,8 @@
 
 import { useState, useRef } from "react";
 import heic2any from "heic2any";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import "./styles.css";
 
 export default function Page() {
@@ -14,6 +16,7 @@ export default function Page() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const inputRef = useRef(null);
+  const reportRef = useRef(null);
 
 async function handleFile(file) {
   if (!file) return;
@@ -129,7 +132,49 @@ setMediaType(detectedType);
       setLoading(false);
     }
   }
+async function downloadReportPDF() {
+  if (!reportRef.current) return;
 
+  try {
+    setLoading(true);
+    setError("");
+
+    const canvas = await html2canvas(reportRef.current, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff"
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save("SCSI-Floor-Diagnostic-Report.pdf");
+  } catch (err) {
+    console.error(err);
+    setError("Could not download the PDF report. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+}
   function resetTool() {
     setImageData(null);
     setMediaType(null);
@@ -240,7 +285,24 @@ setMediaType(detectedType);
 
         {loading && <LoadingState />}
         {error && <div className="error-box active">⚠ {error}</div>}
-        {result && <Results result={result} />}
+{result && (
+  <>
+    <div ref={reportRef}>
+      <Results result={result} />
+    </div>
+
+    <div className="scan-again-wrap">
+      <button
+        className="btn-primary"
+        type="button"
+        onClick={downloadReportPDF}
+        disabled={loading}
+      >
+        📄 Download PDF Report
+      </button>
+    </div>
+  </>
+)}
 
         {result && (
           <div className="scan-again-wrap">
