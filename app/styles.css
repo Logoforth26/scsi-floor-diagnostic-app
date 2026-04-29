@@ -568,3 +568,11 @@ header {
   .upload-inner { padding: 36px 20px; }
   .services-section, .findings-section, .cta-section, .diagnosis-header { padding: 20px; }
 }
+.real-logo {
+  width: 70px;
+  height: auto;
+  object-fit: contain;
+  background: white;
+  padding: 6px;
+  border-radius: 12px;
+}
