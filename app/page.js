@@ -62,14 +62,26 @@ async function handleFile(file) {
   const imageBitmap = await createImageBitmap(file);
 
   const canvas = document.createElement("canvas");
-  canvas.width = imageBitmap.width;
-  canvas.height = imageBitmap.height;
+const maxSize = 1400;
+let width = imageBitmap.width;
+let height = imageBitmap.height;
 
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(imageBitmap, 0, 0);
+if (width > height && width > maxSize) {
+  height = Math.round((height * maxSize) / width);
+  width = maxSize;
+} else if (height > maxSize) {
+  width = Math.round((width * maxSize) / height);
+  height = maxSize;
+}
+
+canvas.width = width;
+canvas.height = height;
+
+const ctx = canvas.getContext("2d");
+ctx.drawImage(imageBitmap, 0, 0, width, height);
 
   const jpegBlob = await new Promise((resolve) => {
-    canvas.toBlob(resolve, "image/jpeg", 0.85);
+   canvas.toBlob(resolve, "image/jpeg", 0.7);
   });
 
   if (!jpegBlob) {
@@ -127,7 +139,14 @@ async function analyzeFloor() {
       })
     });
 
-    const data = await response.json();
+    const text = await response.text();
+
+let data;
+try {
+  data = JSON.parse(text);
+} catch {
+  throw new Error(text || "Server returned an invalid response.");
+}
 
     if (!response.ok) {
       throw new Error(data.error || "Analysis failed.");
