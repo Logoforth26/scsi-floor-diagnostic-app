@@ -207,12 +207,12 @@ const pageWidth = pdf.internal.pageSize.getWidth();
 pdf.setFillColor(20, 45, 80);
 pdf.rect(0, 0, pageWidth, 32, "F");
 
-pdf.addImage(logoDataUrl, "PNG", margin, 6, 24, 20);
+pdf.addImage(logoDataUrl, "PNG", margin, 7, 34, 16);
 
 pdf.setTextColor(255, 255, 255);
 pdf.setFont("helvetica", "bold");
 pdf.setFontSize(18);
-pdf.text("SCSI Floor Diagnostic Report", margin + 32, 18);
+pdf.text("SCSI Floor Diagnostic Report", margin + 44, 18);
 
 y = 42;
     pdf.setTextColor(0, 0, 0);
