@@ -13,7 +13,6 @@ export default function Page() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const inputRef = useRef(null);
-  const reportRef = useRef(null);
 
 async function handleFile(file) {
   if (!file) return;
@@ -109,78 +108,90 @@ setMediaType("image/jpeg");
   }
 }
 
-  async function analyzeFloor() {
-    if (!imageData) return;
-
-    setLoading(true);
-    setResult(null);
-    setError("");
-
-    try {
-      const response = await fetch("/api/analyze-floor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: imageData.base64,
-          mediaType,
-          facilityType,
-          trafficLevel,
-          knownIssues
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Analysis failed.");
-      }
-
-      setResult(data);
-    } catch (err) {
-      setError(err.message || "Analysis failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-async function downloadReportPDF() {
-  if (!reportRef.current) return;
+ async function downloadReportPDF() {
+  if (!result) return;
 
   try {
     setLoading(true);
     setError("");
-    const html2canvasModule = await import("html2canvas");
-const jsPDFModule = await import("jspdf");
 
-const html2canvas = html2canvasModule.default;
-const jsPDF = jsPDFModule.default;
-
-    const canvas = await html2canvas(reportRef.current, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff"
-    });
-
-    const imgData = canvas.toDataURL("image/png");
+    const jsPDFModule = await import("jspdf");
+    const jsPDF = jsPDFModule.default;
 
     const pdf = new jsPDF("p", "mm", "a4");
+
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    const maxWidth = pageWidth - margin * 2;
+    let y = 18;
 
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    function addText(text, size = 11, isBold = false) {
+      pdf.setFont("helvetica", isBold ? "bold" : "normal");
+      pdf.setFontSize(size);
 
-    let heightLeft = imgHeight;
-    let position = 0;
+      const lines = pdf.splitTextToSize(String(text || ""), maxWidth);
 
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+      lines.forEach((line) => {
+        if (y > 275) {
+          pdf.addPage();
+          y = 18;
+        }
 
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+        pdf.text(line, margin, y);
+        y += size * 0.45;
+      });
+
+      y += 3;
     }
+
+    pdf.setFillColor(20, 45, 80);
+    pdf.rect(0, 0, pageWidth, 28, "F");
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(18);
+    pdf.text("SCSI Floor Diagnostic Report", margin, 18);
+
+    y = 38;
+    pdf.setTextColor(0, 0, 0);
+
+    addText(`Floor Type: ${result.floorType || "Not provided"}`, 13, true);
+    addText(`Condition Score: ${result.conditionScore || "N/A"} / 100`, 13, true);
+    addText(`Condition: ${result.conditionTitle || "Not provided"}`, 13, true);
+
+    addText("Condition Summary", 14, true);
+    addText(result.conditionSummary || "No summary provided.", 11);
+
+    addText("Recommended SCSI Services", 14, true);
+
+    if (Array.isArray(result.services) && result.services.length > 0) {
+      result.services.forEach((service, index) => {
+        addText(
+          `${index + 1}. ${service.name || "Service"} — Priority: ${service.priority || "N/A"}`,
+          11,
+          true
+        );
+        addText(service.description || "", 10);
+      });
+    } else {
+      addText("No services provided.", 11);
+    }
+
+    addText("Detailed Findings", 14, true);
+
+    if (Array.isArray(result.findings) && result.findings.length > 0) {
+      result.findings.forEach((finding, index) => {
+        addText(`${index + 1}. ${finding.text || ""}`, 10);
+      });
+    } else {
+      addText("No findings provided.", 11);
+    }
+
+    addText("Next Step", 14, true);
+    addText(
+      "For precise assessment and pricing, contact SCSI directly at 1 (800) 695-0773 or info@scsione.com.",
+      11
+    );
 
     pdf.save("SCSI-Floor-Diagnostic-Report.pdf");
   } catch (err) {
@@ -302,9 +313,9 @@ const jsPDF = jsPDFModule.default;
         {error && <div className="error-box active">⚠ {error}</div>}
 {result && (
   <>
-    <div ref={reportRef}>
-      <Results result={result} />
-    </div>
+<div>
+  <Results result={result} />
+</div>
 
     <div className="scan-again-wrap">
       <button
