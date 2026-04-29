@@ -45,21 +45,44 @@ async function handleFile(file) {
     let uploadFile = file;
 
     if (isHeic) {
-      const heic2anyModule = await import("heic2any");
-const heic2any = heic2anyModule.default;
+  const heic2anyModule = await import("heic2any");
+  const heic2any = heic2anyModule.default;
 
-const convertedBlob = await heic2any({
-        blob: file,
-        toType: "image/jpeg",
-        quality: 0.85
-      });
+  const convertedBlob = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.85
+  });
 
-      uploadFile = new File(
-        [convertedBlob],
-        file.name.replace(/\.(heic|heif)$/i, ".jpg"),
-        { type: "image/jpeg" }
-      );
-    }
+  uploadFile = new File(
+    [convertedBlob],
+    file.name.replace(/\.(heic|heif)$/i, ".jpg"),
+    { type: "image/jpeg" }
+  );
+} else {
+  const imageBitmap = await createImageBitmap(file);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = imageBitmap.width;
+  canvas.height = imageBitmap.height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(imageBitmap, 0, 0);
+
+  const jpegBlob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", 0.85);
+  });
+
+  if (!jpegBlob) {
+    throw new Error("Could not convert image to JPEG.");
+  }
+
+  uploadFile = new File(
+    [jpegBlob],
+    file.name.replace(/\.[^/.]+$/, ".jpg"),
+    { type: "image/jpeg" }
+  );
+}
 
     const reader = new FileReader();
 
@@ -70,22 +93,9 @@ if (!dataUrl) {
   return;
 }
       const [prefix, base64] = dataUrl.split(",");
-let detectedType = prefix.split(";")[0].replace("data:", "");
-
-// Normalize iPhone / browser variations
-if (detectedType === "image/jpg") {
-  detectedType = "image/jpeg";
-}
-
-// Anthropic-supported image media types
-const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-
-if (!allowedTypes.includes(detectedType)) {
-  detectedType = "image/jpeg";
-}
-
 setImageData({ dataUrl, base64 });
-setMediaType(detectedType);
+setMediaType("image/jpeg");
+
       setResult(null);
       setError("");
     };
