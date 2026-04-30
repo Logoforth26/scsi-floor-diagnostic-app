@@ -284,10 +284,10 @@ y = 42;
   alt="SCSI Logo"
   className="real-logo"
 />
-          <div className="logo-text">
-            <span>Southern Cleaning Services</span>
-            <span>Incorporated · Nationwide</span>
-          </div>
+<div className="logo-text">
+  <span>Southern Cleaning Services INC</span>
+  <span className="logo-tagline">“Smarter Cleaning & Superior Innovations.”</span>
+</div>
         </div>
         <div className="header-tag">⚡ AI Floor Diagnostics</div>
       </header>
