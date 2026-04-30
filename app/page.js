@@ -285,7 +285,7 @@ y = 42;
   className="real-logo"
 />
 <div className="logo-text">
-  <span>Southern Cleaning Services INC</span>
+  <span>Southern Cleaning Services Inc</span>
   <span className="logo-tagline">“Smarter Cleaning & Superior Innovations.”</span>
 </div>
         </div>
