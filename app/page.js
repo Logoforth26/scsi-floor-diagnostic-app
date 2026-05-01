@@ -217,9 +217,16 @@ pdf.setFontSize(18);
 pdf.text("SCSI Floor Diagnostic Report", margin + 44, 18);
 
 y = 42;
-    pdf.setTextColor(0, 0, 0);
+pdf.setTextColor(0, 0, 0);
 
-    addText(`Floor Type: ${result.floorType || "Not provided"}`, 13, true);
+addText("Site Information", 14, true);
+addText(`Site / Location: ${siteLocation || "Not provided"}`, 11);
+addText(`Facility Type: ${facilityType || "Not provided"}`, 11);
+addText(`Foot Traffic Level: ${trafficLevel || "Not provided"}`, 11);
+addText(`Known Issues / History: ${knownIssues || "None provided"}`, 11);
+
+addText("AI Floor Diagnostic", 14, true);
+addText(`Floor Type: ${result.floorType || "Not provided"}`, 13, true);
     addText(`Condition Score: ${result.conditionScore || "N/A"} / 100`, 13, true);
     addText(`Condition: ${result.conditionTitle || "Not provided"}`, 13, true);
 
