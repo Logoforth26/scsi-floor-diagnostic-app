@@ -7,6 +7,7 @@ export default function Page() {
   const [imageData, setImageData] = useState(null);
   const [mediaType, setMediaType] = useState(null);
   const [facilityType, setFacilityType] = useState("");
+  const [siteLocation, setSiteLocation] = useState("");
   const [trafficLevel, setTrafficLevel] = useState("");
   const [knownIssues, setKnownIssues] = useState("");
   const [loading, setLoading] = useState(false);
@@ -131,12 +132,13 @@ async function analyzeFloor() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        imageBase64: imageData.base64,
-        mediaType,
-        facilityType,
-        trafficLevel,
-        knownIssues
-      })
+  imageBase64: imageData.base64,
+  mediaType,
+  facilityType,
+  siteLocation,
+  trafficLevel,
+  knownIssues
+})
     });
 
     const text = await response.text();
@@ -267,6 +269,7 @@ y = 42;
     setImageData(null);
     setMediaType(null);
     setFacilityType("");
+    setSiteLocation("");
     setTrafficLevel("");
     setKnownIssues("");
     setResult(null);
@@ -340,6 +343,14 @@ y = 42;
           <div className="context-section active">
             <div className="section-label">Additional Context Optional</div>
             <div className="context-grid">
+            <Field label="Site / Location">
+  <input
+    type="text"
+    value={siteLocation}
+    onChange={(e) => setSiteLocation(e.target.value)}
+    placeholder="Example: Walmart #1762 - Seabrook, NH"
+  />
+</Field>
               <Field label="Facility Type">
                 <select value={facilityType} onChange={(e) => setFacilityType(e.target.value)}>
                   <option value="">Select type...</option>

@@ -65,7 +65,11 @@ header {
   box-shadow: 0 0 20px rgba(46, 124, 246, 0.5);
 }
 
-.logo-text { display: flex; flex-direction: column; }
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
 .logo-text span:first-child {
   font-family: "Bebas Neue", sans-serif;
@@ -75,11 +79,12 @@ header {
   line-height: 1;
 }
 
-.logo-text span:last-child {
-  font-size: 10px;
+.logo-tagline {
+  font-size: 11px;
   color: var(--steel);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: 1px;
+  line-height: 1.2;
 }
 
 .header-tag {
@@ -279,6 +284,7 @@ header {
   text-transform: uppercase;
 }
 
+.field-group input,
 .field-group select,
 .field-group textarea {
   background: rgba(10, 22, 40, 0.9);

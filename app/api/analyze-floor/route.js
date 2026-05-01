@@ -50,8 +50,7 @@ Rules:
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { imageBase64, mediaType, facilityType, trafficLevel, knownIssues } = body;
-
+const { imageBase64, mediaType, facilityType, siteLocation, trafficLevel, knownIssues } = body;
     if (!imageBase64 || !mediaType) {
       return Response.json({ error: "Missing image data." }, { status: 400 });
     }
@@ -60,11 +59,12 @@ export async function POST(request) {
       return Response.json({ error: "Server is missing ANTHROPIC_API_KEY." }, { status: 500 });
     }
 
-    const contextInfo = [
-      facilityType ? `Facility type: ${facilityType}` : "",
-      trafficLevel ? `Foot traffic: ${trafficLevel}` : "",
-      knownIssues ? `Known issues/history: ${knownIssues}` : ""
-    ].filter(Boolean).join("\\n");
+const contextInfo = [
+  siteLocation ? `Site/location: ${siteLocation}` : "",
+  facilityType ? `Facility type: ${facilityType}` : "",
+  trafficLevel ? `Foot traffic: ${trafficLevel}` : "",
+  knownIssues ? `Known issues/history: ${knownIssues}` : ""
+].filter(Boolean).join("\\n");
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
@@ -113,8 +113,9 @@ export async function POST(request) {
   html: `
     <h2>New Floor Diagnostic Report</h2>
 
-    <h3>Customer Context</h3>
-    <p><strong>Facility Type:</strong> ${facilityType || "Not provided"}</p>
+<h3>Customer Context</h3>
+<p><strong>Site / Location:</strong> ${siteLocation || "Not provided"}</p>
+<p><strong>Facility Type:</strong> ${facilityType || "Not provided"}</p>
     <p><strong>Traffic Level:</strong> ${trafficLevel || "Not provided"}</p>
     <p><strong>Known Issues:</strong> ${knownIssues || "None provided"}</p>
 
