@@ -1,11 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { Resend } from "resend";
 
 export const runtime = "nodejs";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
 });
-
+const resend = new Resend(process.env.RESEND_API_KEY);
 const systemPrompt = `You are an expert floor care diagnostician for Southern Cleaning Services Inc. (SCSI), a nationwide commercial facility services company. You specialize in all floor types and treatments.
 
 SCSI's floor services include:
@@ -105,7 +106,47 @@ export async function POST(request) {
       }, { status: 502 });
     }
 
-    return Response.json(result);
+    await resend.emails.send({
+  from: "SCSI Floor Diagnostic <onboarding@resend.dev>",
+  to: "Lgoforth@scsione.com",
+  subject: "New SCSI Floor Diagnostic Report",
+  html: `
+    <h2>New Floor Diagnostic Report</h2>
+
+    <h3>Customer Context</h3>
+    <p><strong>Facility Type:</strong> ${facilityType || "Not provided"}</p>
+    <p><strong>Traffic Level:</strong> ${trafficLevel || "Not provided"}</p>
+    <p><strong>Known Issues:</strong> ${knownIssues || "None provided"}</p>
+
+    <hr />
+
+    <h3>AI Report</h3>
+    <p><strong>Floor Type:</strong> ${result.floorType || "Not provided"}</p>
+    <p><strong>Condition Score:</strong> ${result.conditionScore || "N/A"} / 100</p>
+    <p><strong>Condition:</strong> ${result.conditionTitle || "Not provided"}</p>
+    <p><strong>Summary:</strong> ${result.conditionSummary || "No summary provided"}</p>
+
+    <h3>Recommended Services</h3>
+    <ul>
+      ${(result.services || []).map(service => `
+        <li>
+          <strong>${service.name || "Service"}</strong>
+          — Priority: ${service.priority || "N/A"}<br />
+          ${service.description || ""}
+        </li>
+      `).join("")}
+    </ul>
+
+    <h3>Detailed Findings</h3>
+    <ul>
+      ${(result.findings || []).map(finding => `
+        <li>${finding.text || ""}</li>
+      `).join("")}
+    </ul>
+  `
+});
+
+return Response.json(result);
   } catch (error) {
     return Response.json({
       error: error.message || "Analysis failed."
